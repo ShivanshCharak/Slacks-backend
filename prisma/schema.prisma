@@ -1,0 +1,81 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+model User{
+  id  String @id @default(uuid())
+  firstname String
+  lastname String
+  password String
+  email String @unique
+
+  membership Membership[]
+  refreshToken RefreshToken[]
+  message Message[]
+
+  @@index([email])
+} 
+model Message{
+  id String @id @default(uuid())
+  replyToId String
+  replyTo Message? @relation("MessageReplies",fields: [replyToId],references: [id])
+  replies Message[] @relation("MessageReplies")
+  fromId String
+  from User @relation(fields: [fromId], references: [id])
+  channelId String
+  channel Channel @relation(fields: [channelId],references: [id])
+  content String
+  createAt DateTime @default(now())
+  membership Membership[]
+  
+}
+model Channel{
+  id String @id @default(uuid())
+  memberId   String
+  organizationId String
+  Organization Organization @relation(fields: [organizationId],references: [id])
+  type channelType
+   membership Membership[]
+   message Message[]
+  
+}
+enum channelType {
+  GROUP
+  USERS
+}
+model Organization{
+  id String @id @default(uuid())
+  name String
+  createdAt DateTime @default(now())
+  Ochannel Channel[]
+}
+model Membership{
+  id String @id @default(uuid())
+  userId String
+  user User @relation(fields: [userId],references: [id])
+  checkpoint String
+  checkPoint Message @relation(fields: [checkpoint], references: [id])
+  channelId String
+  channel Channel @relation(fields: [channelId],references: [id]) 
+} 
+model RefreshToken{
+  id String @id @default(uuid())
+  userId String
+  user  User @relation(fields: [userId],references: [id])
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  isRevoked Boolean @default(false)
+}
+
