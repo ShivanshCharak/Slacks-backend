@@ -20,6 +20,7 @@ model User{
   password String
   email String @unique
 
+  moderators Organization?
   membership Membership[]
   refreshToken RefreshToken[]
   message Message[]
@@ -42,7 +43,6 @@ model Message{
 }
 model Channel{
   id String @id @default(uuid())
-  memberId   String
   organizationId String
   Organization Organization @relation(fields: [organizationId],references: [id])
   type channelType
@@ -51,21 +51,23 @@ model Channel{
   
 }
 enum channelType {
-  GROUP
-  USERS
+  Organization
+  DM
 }
 model Organization{
   id String @id @default(uuid())
   name String
+  Moderator String @unique
+  moderator User @relation(fields: [Moderator],references: [id])
   createdAt DateTime @default(now())
-  Ochannel Channel[]
+  channel Channel[]
 }
 model Membership{
   id String @id @default(uuid())
   userId String
   user User @relation(fields: [userId],references: [id])
-  checkpoint String
-  checkPoint Message @relation(fields: [checkpoint], references: [id])
+  checkpoint String?
+  checkPoint Message? @relation(fields: [checkpoint], references: [id])
   channelId String
   channel Channel @relation(fields: [channelId],references: [id]) 
 } 

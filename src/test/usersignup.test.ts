@@ -1,9 +1,10 @@
 import { vi, describe, it, expect, beforeEach } from "vitest";
 import { app } from "..";
-import { prisma } from "./__mock__/db";
+import { prisma } from "./__mock__/PrismaClient";
 import request from "supertest";
 import { sign } from "jsonwebtoken";
 import { compare, hash } from "bcryptjs";
+import {mockedUserdata,mockedRefreshToken,mockedUserSignUp} from './typesAndfakePool'
 
 vi.mock("../../generated/prisma", () => ({
   prisma,
@@ -17,22 +18,6 @@ vi.mock('bcryptjs',()=>({
   hash:vi.fn(()=>Promise.resolve("hashedPassword123"))
 }))
 
-let mockUserdata = {
-  firstname: "john",
-  lastname: "lennon",
-  password: "hashedPassword123",
-  email: "johnlennon@gmail.com",
-  id: "id-1",
-};
-let mockedRefreshToken = {
-  id: "id1",
-  userId: "userid1",
-  expiresAt: new Date(Date.now() * 1000),
-  createdAt: new Date(),
-  updatedAt: new Date(),
-  isRevoked: false,
-  user: mockUserdata,
-};
 
 describe("User Auth Block", () => {
   beforeEach(() => {
@@ -40,26 +25,21 @@ describe("User Auth Block", () => {
   });
 
   describe("Signup /post Route", () => {
-    const userSignUp = {
-      firstname: "john",
-      lastname: "lennon",
-      password: "johnlennon@123", 
-      email: "johnlennon@gmail.com",
-    };
+ 
     it("should signup a user and set a cookie", async () => {
       prisma.user.findUnique.mockResolvedValueOnce(null);
-      prisma.user.create.mockResolvedValueOnce(mockUserdata);
+      prisma.user.create.mockResolvedValueOnce(mockedUserdata);
       prisma.refreshToken.create.mockResolvedValue(mockedRefreshToken);
 
       const res = await request(app)
         .post("/api/v1/user/signup")
-        .send(userSignUp);
+        .send(mockedUserSignUp);
 
       expect(prisma.user.findUnique).toHaveBeenCalledWith({
-        where: { email: userSignUp.email },
+        where: { email: mockedUserSignUp.email },
       });
       expect(res.status).toBe(200);
-      expect(hash).toHaveBeenCalledWith(userSignUp.password,10)
+      expect(hash).toHaveBeenCalledWith(mockedUserSignUp.password,10)
       expect(sign).toHaveBeenCalledTimes(2);
       const response = res.headers["set-cookie"];
       expect(response).toBeTruthy();
@@ -76,12 +56,12 @@ describe("User Auth Block", () => {
     });
     it("User already exists", async () => {
       prisma.user.findUnique.mockResolvedValueOnce({
-        ...userSignUp,
+        ...mockedUserSignUp,
         id: "signupid",
       });
       const res = await request(app)
         .post("/api/v1/user/signup")
-        .send(userSignUp);
+        .send(mockedUserSignUp);
       expect(res.status).toBe(409);
       expect(res.body.message).toEqual("User already exists");
     });
@@ -92,16 +72,17 @@ describe("User Auth Block", () => {
       vi.clearAllMocks()
     })
     it("User shud able to signin", async()=>{
-      prisma.user.findUnique.mockResolvedValue(mockUserdata)
+      prisma.user.findUnique.mockResolvedValue(mockedUserdata)
       const res  = await request(app).post("/api/v1/user/signin").send({
         password: "johnlennon@123",
         email: "johnlennon@gmail.com",
       })
       expect(res.status).toBe(200)
-      expect(prisma.user.findUnique).toHaveBeenCalledWith({where:{email:mockUserdata.email}})
-      expect(compare).toHaveBeenCalledWith("johnlennon@123",mockUserdata.password)
+      expect(prisma.user.findUnique).toHaveBeenCalledWith({where:{email:mockedUserdata.email}})
+      expect(compare).toHaveBeenCalledWith("johnlennon@123",mockedUserdata.password)
       expect(sign).toBeCalledTimes(1)
     })
   })
+  // describe("refresh /post",()=>)
 
 });

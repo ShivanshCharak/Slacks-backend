@@ -1,7 +1,7 @@
 import exprees from 'express'
 // import { PrismaSingleton } from '../PrismaClient'
 import {hash,compare} from 'bcryptjs'
-import {prisma} from '../test/__mock__/db'
+import {prisma} from '../test/__mock__/PrismaClient'
 import {sign, verify} from 'jsonwebtoken'
 
 export const userRouter = exprees.Router()

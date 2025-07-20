@@ -3,6 +3,7 @@ import { PrismaSingleton } from './PrismaClient'
 import { userRouter } from './router/userRouter'
 import dotenv from 'dotenv'
 import cookieParser from 'cookie-parser'
+import { channelRouter } from './router/channelRouter'
 export const app = express()
 
 // app.use(dotenv.config)
@@ -12,7 +13,7 @@ app.use("/api/v1/user",userRouter)
 
 // app.use("/api/v1/messages", messageRouter)
 // app.use("/api/v1/membership",membershipRouter)
-// app.use("/api/v1/channel",channelRouter)
+app.use("/api/v1/channel",channelRouter)
 // app.use("/api/v1/origanization",organizationRouter)
 
 // app.listen(3000,()=>{
